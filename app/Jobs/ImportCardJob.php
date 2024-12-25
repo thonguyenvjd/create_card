@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Repositories\TemplateRepository;
+use App\Repositories\ExportCardJobRepository;
 use App\Services\HtmlToImageService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -22,22 +22,28 @@ class ImportCardJob implements ShouldQueue
     private $content;
     private $userId;
 
-    public function __construct(string $filePath, string $content, int $userId  )
+    private $jobId;
+
+    public function __construct(string $filePath, string $content, int $userId, int $jobId)
     {
         $this->filePath = $filePath;
         $this->content = $content;
         $this->userId = $userId;
+        $this->jobId = $jobId;
     }
 
     public function handle()
     {
         $htmlCssToImageService = app(HtmlToImageService::class);
-        $templateRepository = resolve(TemplateRepository::class);
+        $exportCardJobRepository = app(ExportCardJobRepository::class);
+        $job = $exportCardJobRepository->find($this->jobId);
+        $updatedRecords = [];
 
         try {
             $csv = Reader::createFromPath(storage_path('app/' . $this->filePath), 'r');
             $csv->setHeaderOffset(0);
             $records = $csv->getRecords();
+            $headers = $csv->getHeader();
 
             DB::beginTransaction();
 
@@ -48,28 +54,44 @@ class ImportCardJob implements ShouldQueue
                     [$record['name'], $record['company'], $record['greeting_message']],
                     $updatedContent
                 );
-                $imageUrl = $htmlCssToImageService->generateImage($processedContent);
-                $templateRepository->create([
-                    'content' => $processedContent,
-                    'image' => $imageUrl,
-                    'user_id' => $this->userId,
-                ]);
+                // $imageUrl = $htmlCssToImageService->generateImage($processedContent);
+                $imageUrl = '$htmlCssToImageService->generateImage($processedContent)';
+
+                $record['generated_url'] = $imageUrl;
+                $updatedRecords[] = $record;
             }
+            $outputPath = $this->createUpdatedCsv($headers, $updatedRecords);
 
             DB::commit();
+
+            $job->update([
+                'file_path'   => basename($outputPath),
+                'status'        => 'success'
+            ]);
         } catch (\Exception $e) {
             \Log::error('Import process failed: ' . $e->getMessage());
-            \Log::error($e->getTraceAsString());
             DB::rollBack();
-        } finally {
-            @unlink(storage_path('app/' . $this->filePath));
+            throw $e;
         }
+    }
+
+    private function createUpdatedCsv(array $headers, array $records): string
+    {
+        $headers[] = 'generated_url';
+
+        $outputPath = storage_path('app/updated_' . basename($this->filePath));
+
+        $writer = \League\Csv\Writer::createFromPath($outputPath, 'w+');
+        $writer->insertOne($headers);
+        $writer->insertAll($records);
+
+        return $outputPath;
     }
 
     private function replaceImageInContent(string $content, string $imageUrl): string
     {
         $dom = HtmlDomParser::str_get_html($content);
-        
+
         $imgElement = $dom->findOne('img.image-special');
         if ($imgElement) {
             $imgElement->setAttribute('src', $imageUrl);

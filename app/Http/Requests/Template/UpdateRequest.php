@@ -9,15 +9,7 @@ class UpdateRequest extends BaseRequest
     public function rules(): array
     {
         return [
-            'name'              => 'sometimes',
-            'subject'           => 'sometimes',
             'content'           => 'sometimes',
-            'type'              => 'sometimes',
-            'image'             => 'nullable',
-            'email_setting_id'  => 'nullable',
-            'address_to'        => 'nullable',
-            'address_to_type'   => 'nullable',
-            'scheduled_at'      => 'nullable',
         ];
     }
 

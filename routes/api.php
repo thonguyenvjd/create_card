@@ -7,6 +7,9 @@ Route::prefix('auth')->group(function () {
     Route::post('register', [\App\Http\Controllers\AuthController::class, 'register'])->name('register');
 });
 
+// Template
+Route::get('templates/download-csv/{filename}', [\App\Http\Controllers\TemplateController::class, 'downloadCsv'])->name('templates.download-csv');
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('auth')->group(function () {
         Route::controller(App\Http\Controllers\AuthController::class)->group(function () {
@@ -16,6 +19,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Template
+    Route::get('templates/jobs', [\App\Http\Controllers\TemplateController::class, 'jobs'])->name('templates.jobs');
+    Route::post('templates/import', [\App\Http\Controllers\TemplateController::class, 'import'])->name('templates.import');
     Route::apiResource('templates', \App\Http\Controllers\TemplateController::class);
 
     // Asset

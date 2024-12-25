@@ -4,26 +4,27 @@ namespace App\Http\Requests\Template;
 
 use App\Http\Requests\BaseRequest;
 
-class StoreRequest extends BaseRequest
+class ImportRequest extends BaseRequest
 {
     public function rules(): array
     {
         return [
             'content'           => 'required',
+            'file'              => 'required|file|mimes:csv,txt',
         ];
     }
 
     public function attributes(): array
     {
         return [
-            'content'           => __('messages.attributes.content'),
+            'file'              => __('messages.attributes.file'),
         ];
     }
 
     public function messages(): array
     {
         return [
-            'content.required'    => 'Myテンプレート内容が未入力です',
+            'file.required'    => 'CSVファイルが未選択です',
         ];
     }
 }
