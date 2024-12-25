@@ -48,14 +48,15 @@ class ImportCardJob implements ShouldQueue
             DB::beginTransaction();
 
             foreach ($records as $record) {
-                $updatedContent = $this->replaceImageInContent($this->content, $record['image']);
+                if (!empty($record['image'])) {
+                    $updatedContent = $this->replaceImageInContent($this->content, $record['image']);
+                }
                 $processedContent = str_replace(
                     ['_Name_', '_Company_', '_Greeting_message_'],
                     [$record['name'], $record['company'], $record['greeting_message']],
                     $updatedContent
                 );
-                // $imageUrl = $htmlCssToImageService->generateImage($processedContent);
-                $imageUrl = '$htmlCssToImageService->generateImage($processedContent)';
+                $imageUrl = $htmlCssToImageService->generateImage($processedContent);
 
                 $record['generated_url'] = $imageUrl;
                 $updatedRecords[] = $record;
