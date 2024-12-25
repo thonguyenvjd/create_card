@@ -2,11 +2,6 @@
 
 namespace App\Jobs;
 
-use App\Enums\ImportTypeEnum;
-use App\Enums\SituationEnum;
-use App\Models\RecipientJob;
-use App\Repositories\RecipientAssignRepository;
-use App\Repositories\RecipientRepository;
 use App\Repositories\TemplateRepository;
 use App\Services\HtmlToImageService;
 use Illuminate\Bus\Queueable;
@@ -54,8 +49,10 @@ class ImportCardJob implements ShouldQueue
                     $updatedContent
                 );
                 $imageUrl = $htmlCssToImageService->generateImage($processedContent);
-
-                $templateRepository->create($imageUrl['image']);
+                $templateRepository->create([
+                    'content' => $processedContent,
+                    'image' => $imageUrl['image'],
+                ]);
             }
 
             DB::commit();

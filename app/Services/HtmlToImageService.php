@@ -7,6 +7,7 @@ use Illuminate\Http\Client\Response;
 use Exception;
 use InvalidArgumentException;
 use Illuminate\Http\Client\RequestException;
+use voku\helper\HtmlDomParser;
 
 class HtmlToImageService
 {
@@ -42,6 +43,41 @@ class HtmlToImageService
                 'message' => 'HTML content cannot be empty'
             ];
         }
+
+        $dom = new HtmlDomParser($html);
+        $bodyElement = $dom->findOne('body');
+        $width = 800;
+
+        if ($bodyElement) {
+            $style = $bodyElement->getAttribute('style');
+            if (preg_match('/width:\s*(\d+)px/', $style, $matches)) {
+                $width = (int) $matches[1];
+            }
+        }
+
+        $backgroundElement = $dom->findOne('.background-special');
+        if ($backgroundElement) {
+            $style = $backgroundElement->getAttribute('style');
+            if (preg_match('/width:\s*(\d+)%/', $style, $matches)) {
+                $width = $width * (int)$matches[1] / 100;
+            } elseif (preg_match('/width:\s*(\d+)px/', $style, $matches)) {
+                $width = (int)$matches[1];
+            }
+        }
+
+        $defaultOptions = [
+            'device_scale' => 1,
+            'selector' => '.background-special',
+            'full_page' => true,
+            'wait_until' => 'networkidle0',
+            'wait_for' => 1000,
+            'ms_delay' => 1000,
+            'css_media_type' => 'screen',
+            'transparent' => false,
+            'ignore_ssl_errors' => true
+        ];
+        
+        $options = array_merge($defaultOptions, $options);
 
         try {
             $response = $this->makeApiRequest($html, $css, $options);
