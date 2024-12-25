@@ -58,7 +58,7 @@ class ImportCardJob implements ShouldQueue
                 );
                 $imageUrl = $htmlCssToImageService->generateImage($processedContent);
 
-                $record['generated_url'] = $imageUrl;
+                $record['generated_url'] = $imageUrl['image'];
                 $updatedRecords[] = $record;
             }
             $outputPath = $this->createUpdatedCsv($headers, $updatedRecords);
