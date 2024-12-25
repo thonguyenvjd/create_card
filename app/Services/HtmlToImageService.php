@@ -67,7 +67,7 @@ class HtmlToImageService
 
         $defaultOptions = [
             'device_scale' => 1,
-            'selector' => '.background-special',
+            'selector' => '#background-special',
             'full_page' => true,
             'wait_until' => 'networkidle0',
             'wait_for' => 1000,

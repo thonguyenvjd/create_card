@@ -42,7 +42,7 @@ class StoreAction extends BaseAction
                     @unlink(storage_path('app/' . $path));
                     return $this->httpBadRequest('登録または更新または削除できるデータがありません。');
                 }
-                ImportCardJob::dispatch($path, $content, $data['user_id']);
+                ImportCardJob::dispatch($path, $content, auth()->user()->id);
                 return $this->httpNoContent();
             } catch (\Exception $e) {
                 if (isset($path)) {

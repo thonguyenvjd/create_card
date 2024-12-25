@@ -22,7 +22,7 @@ class ImportCardJob implements ShouldQueue
     private $content;
     private $userId;
 
-    public function __construct(string $filePath, string $content, int $userId)
+    public function __construct(string $filePath, string $content, int $userId  )
     {
         $this->filePath = $filePath;
         $this->content = $content;
@@ -32,7 +32,7 @@ class ImportCardJob implements ShouldQueue
     public function handle()
     {
         $htmlCssToImageService = app(HtmlToImageService::class);
-        $templateRepository = app(TemplateRepository::class);
+        $templateRepository = resolve(TemplateRepository::class);
 
         try {
             $csv = Reader::createFromPath(storage_path('app/' . $this->filePath), 'r');
@@ -51,13 +51,15 @@ class ImportCardJob implements ShouldQueue
                 $imageUrl = $htmlCssToImageService->generateImage($processedContent);
                 $templateRepository->create([
                     'content' => $processedContent,
-                    'image' => $imageUrl['image'],
+                    'image' => $imageUrl,
+                    'user_id' => $this->userId,
                 ]);
             }
 
             DB::commit();
         } catch (\Exception $e) {
             \Log::error('Import process failed: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
             DB::rollBack();
         } finally {
             @unlink(storage_path('app/' . $this->filePath));

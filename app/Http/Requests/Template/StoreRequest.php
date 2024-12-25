@@ -11,7 +11,6 @@ class StoreRequest extends BaseRequest
         return [
             'content'           => 'required',
             'file'              => 'required|file|mimes:csv,txt',
-            'user_id'           => 'required|exists:users,id',
         ];
     }
 
